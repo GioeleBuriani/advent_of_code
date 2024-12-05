@@ -52,6 +52,8 @@ def check_safety(numbers):
         # Check if the report is safe
         if check_safety_condition(report):
             safe_reports += 1
+        elif problem_dampener(report):
+            safe_reports += 1
 
     return safe_reports
 
@@ -79,6 +81,21 @@ def check_safety_condition(report):
     # greater than 4
     else:
         return False
+
+
+def problem_dampener(report):
+
+    # Iterate over the indexes in the report
+    for i in range(len(report)):
+
+        # Remove the level from the array
+        report_copy = np.delete(report, i)
+
+        # Check if the report is safe
+        if check_safety_condition(report_copy):
+            return True
+
+    return False
 
 
 # Main function
