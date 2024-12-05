@@ -45,7 +45,7 @@ def main():
     # Read and parse the content of the file
     numbers = parse_input_file(file_path)
 
-    print (numbers)
+    print ("test")
 
 
 if __name__ == '__main__':
