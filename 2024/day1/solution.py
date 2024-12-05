@@ -2,7 +2,6 @@ import numpy as np
 
 
 def parse_input_file(file_path):
-
     '''
     Function to read and parse the content of the input file
 
@@ -29,15 +28,14 @@ def parse_input_file(file_path):
 
             # Append the numbers to the list
             numbers_list.append(numbers)
-    
+
     # Convert the list to a numpy array
     numbers = np.array(numbers_list)
 
     return numbers
-    
+
 
 def calculate_total_distance(numbers1, numbers2):
-
     '''
     Function to calculate the total distance between two arrays
 
@@ -52,7 +50,7 @@ def calculate_total_distance(numbers1, numbers2):
     # Order the numbers in ascending order
     numbers1 = np.sort(numbers1)
     numbers2 = np.sort(numbers2)
-    
+
     # Make the element wise distance between the two arrays
     distance = np.abs(numbers1 - numbers2)
 
@@ -69,7 +67,8 @@ def get_similarity_score(numbers1, numbers2):
     # Iterate over the first array
     for number1 in numbers1:
 
-        # Count the number of elements in the second array that are equal to the current element
+        # Count the number of elements in the second array that are equal to
+        # the current element
         appearances = np.sum(numbers2 == number1)
 
         # Add the score to the total score
@@ -103,7 +102,6 @@ def main():
     # Print the similarity score
     print("The similarity score is", similarity_score)
 
-    
 
 if __name__ == '__main__':
     main()
