@@ -24,16 +24,61 @@ def parse_input_file(file_path):
             numbers = line.split(' ')
 
             # Convert the numbers to integers
-            numbers = [int(number) for number in numbers]
+            numbers = np.array([int(number) for number in numbers])
 
             # Append the numbers to the list
             numbers_list.append(numbers)
 
-    # Convert the list to a numpy array
-    numbers = np.array(numbers_list)
+    return numbers_list
 
-    return numbers
 
+def check_safety(numbers):
+    '''
+    Function to check the safety of the reports
+
+    Parameters:
+    numbers (list): The list with the reports
+
+    Returns:
+    safe_reports (int): The number of safe reports
+    '''
+
+    # Initialize the counter for the safe reports
+    safe_reports = 0
+
+    # Iterate over the reports
+    for report in numbers:
+
+        # Check if the report is safe
+        if check_safety_condition(report):
+            safe_reports += 1
+
+    return safe_reports
+
+
+def check_safety_condition(report):
+    '''
+    Function to check if a report is safe
+
+    Parameters:
+    report (np.array): The report to check
+
+    Returns:
+    is_safe (bool): True if the report is safe, False otherwise
+    '''
+
+    # Check if the report is sorted in ascending order and the difference
+    # between the numbers is less than 4
+    if np.all(np.diff(report) > 0) and np.all(np.diff(report) < 4):
+        return True
+    # Check if the report is sorted in descending order and the difference
+    # between the numbers is less than 4
+    elif np.all(np.diff(report) < 0) and np.all(np.diff(report) > -4):
+        return True
+    # If the report is not sorted or the difference between the numbers is
+    # greater than 4
+    else:
+        return False
 
 
 # Main function
@@ -45,7 +90,11 @@ def main():
     # Read and parse the content of the file
     numbers = parse_input_file(file_path)
 
-    print ("test")
+    # Check the safety of the reports
+    safe_reports = check_safety(numbers)
+
+    # Print the number of safe reports
+    print(f'The number of safe reports is: {safe_reports}')
 
 
 if __name__ == '__main__':
