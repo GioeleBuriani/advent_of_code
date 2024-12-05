@@ -84,6 +84,15 @@ def check_safety_condition(report):
 
 
 def problem_dampener(report):
+    '''
+    Function to check if a report is safe with a dampener
+
+    Parameters:
+    report (np.array): The report to check
+
+    Returns:
+    is_safe (bool): True if the report is safe, False otherwise
+    '''
 
     # Iterate over the indexes in the report
     for i in range(len(report)):
