@@ -113,7 +113,7 @@ def main():
     good_sum = sum_middle_numbers(good_orders)
     fixed_sum = sum_middle_numbers(fixed_orders)
 
-    print("The sum of the middle numbers of gthe good orders is", good_sum)
+    print("The sum of the middle numbers of the good orders is", good_sum)
     print("The sum of the middle numbers of the fixed orders is", fixed_sum)
 
 
