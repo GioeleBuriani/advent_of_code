@@ -5,116 +5,159 @@ def parse_input_file(file_path):
 
     with open(file_path, 'r') as file:
 
-        rules_list = []
-        orders_list = []
-        switch = False
+        lines = [list(line.strip()) for line in file.readlines()]
+        map = np.vstack(lines)
+        
+    return map
 
-        for line in file:
 
-            if line == '\n':
-                switch = True
-                continue
+def calculate_path(map):
 
-            if not switch:
-                rule = line.split('|')
-                rule = [int(number) for number in rule]
-                rules_list.append(rule)
+    states = []
+    obstacles = []
+    
+    position = np.array(np.where(map == '^')).flatten()
+    direction = 1
+    state = np.hstack([position, direction])
 
+    while True:
+
+        state_copy = state.copy()
+        map_copy = map.copy()
+
+        if not np.any([np.array_equal(state[0:2], st[0:2]) for st in states]):
+            states.append(state.copy())
+
+        if check_end(map, state):
+            break
+
+        loop_states = []
+        obstacle = np.array(move(state_copy)[0:2])
+        map_copy[obstacle[0], obstacle[1]] = '#'
+
+        if find_loop(map_copy, state, loop_states):
+            obstacles.append(obstacle)
+            break
+        
+        if check_obstacle(map, state):
+            if state[2] == 4:
+                state[2] = 1
             else:
-                order = line.split(',')
-                order = [int(number) for number in order]
-                orders_list.append(order)
+                state[2] += 1
 
-    rules = np.array(rules_list)
+        state = move(state)
 
-    return rules, orders_list
+    steps = len(states)
+    n_obstacles = len(np.unique(obstacles))
 
-
-def check_orders(rules, orders):
-
-    good_orders = []
-    bad_orders = []
-
-    for order in orders:
-
-        wrong = False
-
-        for i in range(len(order) - 1):
-
-            indices = np.where(rules[:, 1] == order[i])[0]
-
-            for number in order[i + 1:]:
-
-                if number in rules[indices, 0]:
-
-                    wrong = True
-
-        if not wrong:
-            good_orders.append(order)
-        else:
-            bad_orders.append(order)
-
-    return good_orders, bad_orders
+    return steps, n_obstacles
 
 
-def fix_orders(rules, orders):
+def find_loop(map, state, loop_states):
 
-    fixed_orders = []
+    if not np.any([np.array_equal(state, st) for st in loop_states]):
+        loop_states.append(state.copy())
+    else:
+        return True
 
-    for order in orders:
+    if state[2] == 1:
 
-        fixed_order = order.copy()
-        i = 0
+        if '#' in map[state[0], state[1]:]:
 
-        while i < len(order) - 1:
+            new_state = state.copy()
+            new_state[1] = state[1] + np.where(map[state[0], state[1]:] == '#')[0][0] - 1
+            new_state[2] += 1
 
-            indices = np.where(rules[:, 1] == order[i])[0]
-            leaders = rules[indices, 0]
+            find_loop(map, new_state, loop_states)
 
-            for j in range(len(order[i + 1:])):
+    elif state[2] == 2:
+        if '#' in map[state[0]:, state[1]]:
 
-                if order[i + 1 + j] in leaders:
-                    fixed_order[i] = order[i + 1 + j]
-                    fixed_order[i + 1 + j] = order[i]
-                    order = fixed_order.copy()
-                    i -= 1
-                    break
+            new_state = state.copy()
+            new_state[0] = state[0] + np.where(map[state[0]:, state[1]] == '#')[0][0] - 1
+            new_state[2] += 1
 
-            i += 1
+            find_loop(map, new_state, loop_states)
 
-        fixed_orders.append(fixed_order)
+    elif state[2] == 3:
+        if '#' in map[state[0], :state[1]]:
 
-    return fixed_orders
+            new_state = state.copy()
+            new_state[1] = np.where(map[state[0], :state[1]] == '#')[0][0] + 1
+            new_state[2] += 1
+
+            find_loop(map, new_state, loop_states)
+
+    elif state[2] == 4:
+        if '#' in map[:state[0], state[1]]:
+
+            new_state = state.copy()
+            new_state[0] = np.where(map[:state[0], state[1]] == '#')[0][0] + 1
+            new_state[2] = 1
+
+            find_loop(map, new_state, loop_states)
+
+    return False
 
 
-def sum_middle_numbers(orders):
+def check_end(map, state):
+    
+    limit = map.shape
 
-    middle_numbers = []
+    if state[2] == 1 and state[0] == 0:
+        return True
+    elif state[2] == 2 and state[1] == limit[1] - 1:
+        return True
+    elif state[2] == 3 and state[0] == limit[0] - 1:
+        return True
+    elif state[2] == 4 and state[1] == 0:
+        return True
+    
+    return False
 
-    for order in orders:
 
-        middle_numbers.append(order[len(order) // 2])
+def check_obstacle(map, state):
 
-    sum = np.sum(middle_numbers)
+    if state[2] == 1:
+        if map[state[0] - 1, state[1]] == '#':
+            return True
+    elif state[2] == 2:
+        if map[state[0], state[1] + 1] == '#':
+            return True
+    elif state[2] == 3:
+        if map[state[0] + 1, state[1]] == '#':
+            return True
+    elif state[2] == 4:
+        if map[state[0], state[1] - 1] == '#':
+            return True
 
-    return sum
+    return False
+
+
+def move(state):
+
+    if state[2] == 1:
+        state[0] -= 1
+    elif state[2] == 2:
+        state[1] += 1
+    elif state[2] == 3:
+        state[0] += 1
+    elif state[2] == 4:
+        state[1] -= 1
+
+    return state
 
 
 def main():
 
-    file_path = '2024/day5/input.txt'
+    file_path = '2024/day6/test_input.txt'
 
-    rules, orders = parse_input_file(file_path)
+    map = parse_input_file(file_path)
 
-    good_orders, bad_orders = check_orders(rules, orders)
+    steps, n_obstacles = calculate_path(map)
 
-    fixed_orders = fix_orders(rules, bad_orders)
-
-    good_sum = sum_middle_numbers(good_orders)
-    fixed_sum = sum_middle_numbers(fixed_orders)
-
-    print("The sum of the middle numbers of gthe good orders is", good_sum)
-    print("The sum of the middle numbers of the fixed orders is", fixed_sum)
+    print("The number of steps is", steps)
+    print("The number of obstacles is", n_obstacles)
 
 
 if __name__ == '__main__':
