@@ -25,8 +25,9 @@ def calculate_path(map):
         state_copy = state.copy()
         map_copy = map.copy()
 
-        if not np.any([np.array_equal(state[0:2], st[0:2]) for st in states]):
-            states.append(state.copy())
+        # if not np.any([np.array_equal(state[0:2], st[0:2]) for st in states]):
+        #     states.append(state.copy())
+        states.append(state.copy())
 
         if check_end(map, state):
             break
@@ -36,8 +37,7 @@ def calculate_path(map):
         map_copy[obstacle[0], obstacle[1]] = '#'
 
         if find_loop(map_copy, state, loop_states):
-            obstacles.append(obstacle)
-            break
+            obstacles.append(obstacle.copy())
         
         if check_obstacle(map, state):
             if state[2] == 4:
@@ -47,8 +47,8 @@ def calculate_path(map):
 
         state = move(state)
 
-    steps = len(states)
-    n_obstacles = len(np.unique(obstacles))
+    steps = len(np.unique(np.vstack(states)[:,0:2], axis=0))    
+    n_obstacles = len(np.unique(np.vstack(obstacles), axis=0))
 
     return steps, n_obstacles
 
@@ -68,7 +68,8 @@ def find_loop(map, state, loop_states):
             new_state[1] = state[1] + np.where(map[state[0], state[1]:] == '#')[0][0] - 1
             new_state[2] += 1
 
-            find_loop(map, new_state, loop_states)
+            if find_loop(map, new_state, loop_states):
+                return True
 
     elif state[2] == 2:
         if '#' in map[state[0]:, state[1]]:
@@ -77,25 +78,28 @@ def find_loop(map, state, loop_states):
             new_state[0] = state[0] + np.where(map[state[0]:, state[1]] == '#')[0][0] - 1
             new_state[2] += 1
 
-            find_loop(map, new_state, loop_states)
+            if find_loop(map, new_state, loop_states):
+                return True
 
     elif state[2] == 3:
         if '#' in map[state[0], :state[1]]:
 
             new_state = state.copy()
-            new_state[1] = np.where(map[state[0], :state[1]] == '#')[0][0] + 1
+            new_state[1] = np.where(map[state[0], :state[1]] == '#')[0][-1] + 1
             new_state[2] += 1
 
-            find_loop(map, new_state, loop_states)
+            if find_loop(map, new_state, loop_states):
+                return True
 
     elif state[2] == 4:
         if '#' in map[:state[0], state[1]]:
 
             new_state = state.copy()
-            new_state[0] = np.where(map[:state[0], state[1]] == '#')[0][0] + 1
+            new_state[0] = np.where(map[:state[0], state[1]] == '#')[0][-1] + 1
             new_state[2] = 1
 
-            find_loop(map, new_state, loop_states)
+            if find_loop(map, new_state, loop_states):
+                return True
 
     return False
 
@@ -150,7 +154,7 @@ def move(state):
 
 def main():
 
-    file_path = '2024/day6/test_input.txt'
+    file_path = '2024/day6/input.txt'
 
     map = parse_input_file(file_path)
 
