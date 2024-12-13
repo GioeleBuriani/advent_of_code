@@ -48,12 +48,6 @@ def calculate_path(map):
 
         state = move(state)
 
-    test_map = map.copy()
-    for obstacle in obstacles:
-        test_map[obstacle[0], obstacle[1]] = 'O'
-    print(test_map)
-
-
     steps = len(np.unique(np.vstack(states)[:,0:2], axis=0))    
     n_obstacles = len(np.unique(np.vstack(obstacles), axis=0))
 
