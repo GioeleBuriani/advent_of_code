@@ -19,6 +19,7 @@ def calculate_path(map):
     position = np.array(np.where(map == '^')).flatten()
     direction = 1
     state = np.hstack([position, direction])
+    initial_state = state.copy()
 
     while True:
 
@@ -47,8 +48,17 @@ def calculate_path(map):
 
         state = move(state)
 
+    test_map = map.copy()
+    for obstacle in obstacles:
+        test_map[obstacle[0], obstacle[1]] = 'O'
+    print(test_map)
+
+
     steps = len(np.unique(np.vstack(states)[:,0:2], axis=0))    
     n_obstacles = len(np.unique(np.vstack(obstacles), axis=0))
+
+    if initial_state[0:2] in obstacle:
+        n_obstacles -= 1
 
     return steps, n_obstacles
 
