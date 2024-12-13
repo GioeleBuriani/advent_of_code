@@ -16,7 +16,7 @@ def parse_input_file(file_path):
 
         lines = [list(line.strip()) for line in file.readlines()]
         map = np.vstack(lines)
-        
+
     return map
 
 
@@ -34,14 +34,10 @@ def calculate_path(map):
 
     states = []
     obstacles = []
-    no_obstacles = []
 
-    obstacles_b = []
-    
     position = np.array(np.where(map == '^')).flatten()
     direction = 1
     state = np.hstack([position, direction])
-    initial_state = state.copy()
 
     while True:
 
@@ -53,120 +49,34 @@ def calculate_path(map):
         if check_end(map, state):
             break
 
-        loop_states = []
-        obstacle = np.array(move(state_copy)[0:2])
+        obstacle = np.array(move(map, state_copy)[0:2])
         map_copy[obstacle[0], obstacle[1]] = '#'
-
+        loop_states = []
         if find_loop(map_copy, state, loop_states):
-            if not np.any([np.array_equal(obstacle, ob) for ob in no_obstacles]):
-                obstacles_b.append(obstacle.copy())
-            if not np.any([np.array_equal(obstacle, st[0:2]) for st in states]):
+            if not np.any([np.array_equal(obstacle, st[0:2])
+                          for st in states]):
                 obstacles.append(obstacle.copy())
-        else:
-            no_obstacles.append(obstacle.copy())
-        
-        if check_obstacle(map, state):
-            if state[2] == 4:
-                state[2] = 1
-            else:
-                state[2] += 1
-            if check_obstacle(map, state):
-                if state[2] == 4:
-                    state[2] = 1
-                else:
-                    state[2] += 1
 
-        state = move(state)
+        state = move(map, state)
 
-    # Find the element that is in obstacles_b but not in obstacles
-    for ob in obstacles_b:
-        if not np.any([np.array_equal(ob, ob_b) for ob_b in obstacles]):
-
-    steps = len(np.unique(np.vstack(states)[:,0:2], axis=0))    
+    steps = len(np.unique(np.vstack(states)[:, 0:2], axis=0))
     n_obstacles = len(np.unique(np.vstack(obstacles), axis=0))
-    n_obstacles_b = len(np.unique(np.vstack(obstacles_b), axis=0))
-    print(n_obstacles_b)
-
-    if np.any([np.array_equal(initial_state[0:2], ob) for ob in obstacles]):
-        n_obstacles -= 1
 
     return steps, n_obstacles
-
-
-def find_loop(map, state, loop_states):
-    """
-    Find a loop in the path of the robot.
-    
-    Parameters:
-    map (numpy array): The map as a numpy array.
-    state (numpy array): The current state of the robot.
-    loop_states (list): A list of states the robot has been in.
-    
-    Returns:
-    bool: True if a loop is found, False otherwise.
-    """
-
-    if not np.any([np.array_equal(state, st) for st in loop_states]):
-        loop_states.append(state.copy())
-    else:
-        return True
-
-    if state[2] == 1:
-
-        if '#' in map[state[0], state[1]:]:
-
-            new_state = state.copy()
-            new_state[1] = state[1] + np.where(map[state[0], state[1]:] == '#')[0][0] - 1
-            new_state[2] += 1
-
-            if find_loop(map, new_state, loop_states):
-                return True
-
-    elif state[2] == 2:
-        if '#' in map[state[0]:, state[1]]:
-
-            new_state = state.copy()
-            new_state[0] = state[0] + np.where(map[state[0]:, state[1]] == '#')[0][0] - 1
-            new_state[2] += 1
-
-            if find_loop(map, new_state, loop_states):
-                return True
-
-    elif state[2] == 3:
-        if '#' in map[state[0], :state[1]]:
-
-            new_state = state.copy()
-            new_state[1] = np.where(map[state[0], :state[1]] == '#')[0][-1] + 1
-            new_state[2] += 1
-
-            if find_loop(map, new_state, loop_states):
-                return True
-
-    elif state[2] == 4:
-        if '#' in map[:state[0], state[1]]:
-
-            new_state = state.copy()
-            new_state[0] = np.where(map[:state[0], state[1]] == '#')[0][-1] + 1
-            new_state[2] = 1
-
-            if find_loop(map, new_state, loop_states):
-                return True
-
-    return False
 
 
 def check_end(map, state):
     """
     Check if the robot has reached the end of the map.
-    
+
     Parameters:
     map (numpy array): The map as a numpy array.
     state (numpy array): The current state of the robot.
-    
+
     Returns:
     bool: True if the robot has reached the end of the map, False otherwise.
     """
-    
+
     limit = map.shape
 
     if state[2] == 1 and state[0] == 0:
@@ -177,8 +87,42 @@ def check_end(map, state):
         return True
     elif state[2] == 4 and state[1] == 0:
         return True
-    
+
     return False
+
+
+def move(map, state):
+    """
+    Move the robot to the next position.
+
+    Parameters:
+    state (numpy array): The current state of the robot.
+
+    Returns:
+    state (numpy array): The new state of the robot.
+    """
+
+    if check_obstacle(map, state):
+        if state[2] == 4:
+            state[2] = 1
+        else:
+            state[2] += 1
+        if check_obstacle(map, state):
+            if state[2] == 4:
+                state[2] = 1
+            else:
+                state[2] += 1
+
+    if state[2] == 1:
+        state[0] -= 1
+    elif state[2] == 2:
+        state[1] += 1
+    elif state[2] == 3:
+        state[0] += 1
+    elif state[2] == 4:
+        state[1] -= 1
+
+    return state
 
 
 def check_obstacle(map, state):
@@ -209,27 +153,71 @@ def check_obstacle(map, state):
     return False
 
 
-def move(state):
+def find_loop(map, state, loop_states):
     """
-    Move the robot to the next position.
+    Find a loop in the path of the robot.
 
     Parameters:
+    map (numpy array): The map as a numpy array.
     state (numpy array): The current state of the robot.
+    loop_states (list): A list of states the robot has been in.
 
     Returns:
-    state (numpy array): The new state of the robot.
+    bool: True if a loop is found, False otherwise.
     """
 
-    if state[2] == 1:
-        state[0] -= 1
-    elif state[2] == 2:
-        state[1] += 1
-    elif state[2] == 3:
-        state[0] += 1
-    elif state[2] == 4:
-        state[1] -= 1
+    if not np.any([np.array_equal(state, st) for st in loop_states]):
+        loop_states.append(state.copy())
+    else:
+        return True
 
-    return state
+    if state[2] == 1:
+
+        if '#' in map[state[0], state[1]:]:
+
+            new_state = state.copy()
+            new_state[1] = state[1] + \
+                np.where(map[state[0], state[1]:] == '#')[0][0] - 1
+            new_state[2] += 1
+
+            if find_loop(map, new_state, loop_states):
+                return True
+
+    elif state[2] == 2:
+
+        if '#' in map[state[0]:, state[1]]:
+
+            new_state = state.copy()
+            new_state[0] = state[0] + \
+                np.where(map[state[0]:, state[1]] == '#')[0][0] - 1
+            new_state[2] += 1
+
+            if find_loop(map, new_state, loop_states):
+                return True
+
+    elif state[2] == 3:
+
+        if '#' in map[state[0], :state[1]]:
+
+            new_state = state.copy()
+            new_state[1] = np.where(map[state[0], :state[1]] == '#')[0][-1] + 1
+            new_state[2] += 1
+
+            if find_loop(map, new_state, loop_states):
+                return True
+
+    elif state[2] == 4:
+        
+        if '#' in map[:state[0], state[1]]:
+
+            new_state = state.copy()
+            new_state[0] = np.where(map[:state[0], state[1]] == '#')[0][-1] + 1
+            new_state[2] = 1
+
+            if find_loop(map, new_state, loop_states):
+                return True
+
+    return False
 
 
 def main():
