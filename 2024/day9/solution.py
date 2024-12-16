@@ -8,7 +8,7 @@ def parse_input_file(file_path):
 
         line = file.readline().strip()
         disk_map = [int(digit) for digit in line]
-        
+
     return disk_map
 
 
@@ -23,7 +23,7 @@ def visualize_blocks(disk_map):
             for j in range(disk_map[i]):
                 visualization.append(id)
             id += 1
-        
+
         if i % 2 != 0:
             for j in range(disk_map[i]):
                 visualization.append('.')
@@ -35,14 +35,14 @@ def rearrange_visualization(visualization):
 
     arranged_visualization = visualization.copy()
     end = False
-    
+
     for i in range(1, len(visualization)):
 
         if end:
             break
 
         if visualization[-i] != '.':
-            
+
             for j in range(len(visualization)):
                 if j >= len(visualization) - i:
                     end = True
@@ -51,7 +51,7 @@ def rearrange_visualization(visualization):
                     arranged_visualization[j] = visualization[-i]
                     arranged_visualization[-i] = '.'
                     break
-    
+
     return arranged_visualization
 
 
@@ -59,11 +59,9 @@ def calulate_checksum(arranged_visualization):
 
     products = []
     for i in range(len(arranged_visualization)):
-        
-        if arranged_visualization[i] == '.':
-            break
 
-        products.append(i * arranged_visualization[i])
+        if arranged_visualization[i] != '.':
+            products.append(i * int(arranged_visualization[i]))\
 
     checksum = sum(products)
 
@@ -80,44 +78,43 @@ def expand_disk_map(disk_map):
         if i % 2 == 0:
             expansion.append(id)
             id += 1
-        
+
         if i % 2 != 0:
             expansion.append(-1)
 
     expanded_map = np.stack([disk_map, expansion])
-    
+
     return expanded_map
 
 
 def rearrange_expanded_map(expanded_map):
 
     arranged_map = expanded_map.copy()
-    max_id = max(expanded_map[1, :])
-
-    print(visualize_expanded_map(arranged_map))
-    print('-------------------------------------------------')
 
     for i in range(1, expanded_map.shape[1]):
 
-        if expanded_map[1, -i] == max_id:
+        if expanded_map[1, -i] != -1:
 
-            for j in range(expanded_map.shape[1]):
+            for j in range(arranged_map.shape[1]):
 
-                if arranged_map[1, j] == -1 and arranged_map[0, j] >= expanded_map[0, -i]:
-                    
-                    arranged_map = np.insert(arranged_map, j, expanded_map[:,-i], axis=1)
-                    
-                    arranged_map[0, j+1] -= arranged_map[0, j]
+                if j >= arranged_map.shape[1] - i:
+                    break
 
-                    arranged_map[1, -i] = -1
+                if arranged_map[1, j] == - \
+                        1 and arranged_map[0, j] >= expanded_map[0, -i]:
 
-                    print(visualize_expanded_map(arranged_map))
-                    print('-------------------------------------------------')
+                    arranged_map = np.insert(
+                        arranged_map, j, expanded_map[:, -i], axis=1)
+
+                    arranged_map[0, j + 1] -= arranged_map[0, j]
+
+                    for k in range(arranged_map.shape[1] - 1, 0, -1):
+                        if arranged_map[1, k] == expanded_map[1, -i]:
+                            arranged_map[1, k] = -1
+                            break
 
                     break
 
-            max_id -= 1
-    
     return arranged_map
 
 
@@ -132,21 +129,14 @@ def visualize_expanded_map(expanded_map):
                 visualization.append('.')
         else:
             for j in range(expanded_map[0, i]):
+                visualization.append(expanded_map[1, i])
 
-                value = str(expanded_map[1, i])
-
-                visualization.append(str(expanded_map[1, i]))
-
-    return np.array(visualization)
-                    
-            
-            
-
+    return visualization
 
 
 def main():
 
-    file_path = '2024/day9/test_input.txt'
+    file_path = '2024/day9/input.txt'
 
     disk_map = parse_input_file(file_path)
 
@@ -164,7 +154,9 @@ def main():
 
     visualization = visualize_expanded_map(arranged_map)
 
-    print(visualization)
+    checksum = calulate_checksum(visualization)
+
+    print("Checksum: ", checksum)
 
 
 if __name__ == '__main__':
