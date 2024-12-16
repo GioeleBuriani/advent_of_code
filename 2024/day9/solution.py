@@ -92,22 +92,16 @@ def expand_disk_map(disk_map):
 def rearrange_expanded_map(expanded_map):
 
     arranged_map = expanded_map.copy()
-    end = False
+    max_id = max(expanded_map[1, :])
 
     print(visualize_expanded_map(arranged_map))
     print('-------------------------------------------------')
 
     for i in range(1, expanded_map.shape[1]):
 
-        if end:
-            break
-
-        if expanded_map[1, -i] != -1:
+        if expanded_map[1, -i] == max_id:
 
             for j in range(expanded_map.shape[1]):
-
-                if j >= expanded_map.shape[1] - i:
-                    break
 
                 if arranged_map[1, j] == -1 and arranged_map[0, j] >= expanded_map[0, -i]:
                     
@@ -116,9 +110,13 @@ def rearrange_expanded_map(expanded_map):
                     arranged_map[0, j+1] -= arranged_map[0, j]
 
                     arranged_map[1, -i] = -1
+
                     print(visualize_expanded_map(arranged_map))
                     print('-------------------------------------------------')
+
                     break
+
+            max_id -= 1
     
     return arranged_map
 
