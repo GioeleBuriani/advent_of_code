@@ -1,3 +1,6 @@
+
+### THIS CODE IS NOT WELL OPTIMIZED AND DOCUMENTED ###
+
 import numpy as np
 from itertools import combinations
 
