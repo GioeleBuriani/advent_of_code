@@ -2,40 +2,90 @@ import numpy as np
 
 
 def parse_input_file(file_path):
+    """
+    Parse the input file and return the stone line.
+
+    Parameters:
+    file_path (str): The path to the input file.
+
+    Returns:
+    stone_line (numpy array): The stone line.
+    """
 
     with open(file_path, 'r') as file:
 
         stone_line = np.array(list(map(int, file.readline().split())))
-        
+
     return stone_line
 
 
-def update_line(stone_line):
+def update_line(stone_line, blinks):
+    """
+    Update the stone line with the given number of blinks.
 
-    for i in range(75):
-        print("Iteration: ", i)
+    Parameters:
+    stone_line (numpy array): The stone line.
+    blinks (int): The number of blinks.
 
-        new_line = []
-        for j in range(len(stone_line)):
+    Returns:
+    number_of_stones (int): The number of stones in the stone line.
+    """
 
-            if stone_line[j] == 0:
-                new_line.append(1)
+    results = 0
+    memo = {}
+    for i in range(len(stone_line)):
 
-            elif len(str(stone_line[j])) % 2 == 0:
+        result = expand_step(stone_line[i], blinks, memo)
+        results += result
 
-                mid = len(str(stone_line[j])) // 2
-                stone1 = int(str(stone_line[j])[:mid])
-                stone2 = int(str(stone_line[j])[mid:])
-                
-                new_line.append(stone1)
-                new_line.append(stone2)
-            
-            else:
-                new_line.append(stone_line[j] * 2024)
+    return results
 
-        stone_line = np.array(new_line)
-    
-    return stone_line
+
+def expand_step(stone, blinks, memo):
+    """
+    Expand the stone line with the given number of blinks.
+
+    Parameters:
+    stone (int): The stone.
+    blinks (int): The number of blinks.
+    memo (dict): The memoization dictionary.
+
+    Returns:
+    result (int): The number of stones in the expanded stone line.
+    """
+
+    if blinks == 0:
+
+        return 1
+
+    if (stone, blinks) in memo:
+
+        return memo[(stone, blinks)]
+
+    if stone == 0:
+
+        next_stones = [1]
+
+    elif len(str(stone)) % 2 == 0:
+
+        mid = len(str(stone)) // 2
+        stone1 = int(str(stone)[:mid])
+        stone2 = int(str(stone)[mid:])
+
+        next_stones = [stone1, stone2]
+
+    else:
+
+        next_stones = [stone * 2024]
+
+    result = 0
+    for next_stone in next_stones:
+
+        result += expand_step(next_stone, blinks - 1, memo)
+
+    memo[(stone, blinks)] = result
+
+    return result
 
 
 def main():
@@ -44,11 +94,10 @@ def main():
 
     stone_line = parse_input_file(file_path)
 
-    updated_line = update_line(stone_line)
-
-    number_of_stones = len(updated_line)
+    number_of_stones = update_line(stone_line, 75)
 
     print("Number of stones: ", number_of_stones)
+
 
 if __name__ == '__main__':
     main()
