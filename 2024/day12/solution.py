@@ -21,6 +21,16 @@ def parse_input_file(file_path):
 
 
 def get_total_price(map):
+    """
+    Get the total price of the plants in the map.
+
+    Parameters:
+    map (np.ndarray): A numpy array representing the map.
+
+    Returns:
+    price (int): The total price of the plants in the map.
+    price_discounted (int): The total price of the plants in the map with a discount
+    """
 
     plant_types = np.unique(map)
     price = 0
@@ -31,7 +41,7 @@ def get_total_price(map):
         regions = find_regions(map, type)
 
         for region in regions:
-            
+
             area = len(region)
 
             perimeter = find_region_perimeter(region)
@@ -44,13 +54,23 @@ def get_total_price(map):
 
 
 def find_regions(map, type):
+    """
+    Find the regions of a given type in the map.
+
+    Parameters:
+    map (np.ndarray): A numpy array representing the map.
+    type (str): The type of plant to find.
+
+    Returns:
+    regions (list): A list of regions of the given type.
+    """
 
     plants = np.array(np.where(map == type))
 
     regions = []
     while len(plants.T) != 0:
-        
-        plant = plants[:,0]
+
+        plant = plants[:, 0]
         plants = np.delete(plants, 0, axis=1)
 
         region = [plant]
@@ -60,7 +80,11 @@ def find_regions(map, type):
 
                 if is_adjacent(plant1, plant2):
                     region.append(plant2)
-                    plants = np.delete(plants, np.where(np.all(plants == plant2.reshape(2,1), axis=0)), axis=1)
+                    plants = np.delete(
+                        plants, np.where(
+                            np.all(
+                                plants == plant2.reshape(
+                                    2, 1), axis=0)), axis=1)
 
         regions.append(region)
 
@@ -68,11 +92,30 @@ def find_regions(map, type):
 
 
 def is_adjacent(plant1, plant2):
+    """
+    Check if two plants are adjacent.
+
+    Parameters:
+    plant1 (tuple): The coordinates of the first plant.
+    plant2 (tuple): The coordinates of the second plant.
+
+    Returns:
+    adjacent (bool): True if the plants are adjacent, False otherwise.
+    """
 
     return abs(plant1[0] - plant2[0]) + abs(plant1[1] - plant2[1]) == 1
 
 
 def find_region_perimeter(region):
+    """
+    Find the perimeter of a region.
+
+    Parameters:
+    region (list): A list of plants in the region.
+
+    Returns:
+    perimeter (int): The perimeter of the region.
+    """
 
     perimeter = len(region) * 4
 
@@ -86,6 +129,15 @@ def find_region_perimeter(region):
 
 
 def find_region_sides(region):
+    """
+    Find the number of sides of a region.
+
+    Parameters:
+    region (list): A list of plants in the region.
+
+    Returns:
+    total_sides (int): The number of sides of the region.
+    """
 
     region = [(int(plant[0]), int(plant[1])) for plant in region]
 
@@ -105,43 +157,35 @@ def find_region_sides(region):
         if (plant[0] + 1, plant[1]) not in region:
             down_sides.append((plant[0] + 1, plant[1]))
 
-    left_ends = []
+    total_sides = 0
+
+    left_ends = {(side[0] + 1, side[1])
+                 for side in left_sides}  # Use a set for O(1) lookups
     for side in left_sides:
         if side not in left_ends:
-            left_ends.append((side[0] + 1, side[1]))
-    
-    right_ends = []
+            total_sides += 1
+
+    right_ends = {(side[0] + 1, side[1]) for side in right_sides}
     for side in right_sides:
         if side not in right_ends:
-            right_ends.append((side[0] + 1, side[1]))
-    
-    up_ends = []
+            total_sides += 1
+
+    up_ends = {(side[0], side[1] + 1) for side in up_sides}
     for side in up_sides:
         if side not in up_ends:
-            up_ends.append((side[0], side[1] + 1))
+            total_sides += 1
 
-    down_ends = []
+    down_ends = {(side[0], side[1] + 1) for side in down_sides}
     for side in down_sides:
         if side not in down_ends:
-            down_ends.append((side[0], side[1] + 1))
-
-    total_sides = len(left_ends) + len(right_ends) + len(up_ends) + len(down_ends)
-    print(total_sides)
-
-    # print(region)
-    # print(np.array(up_sides))
-    # print(np.array(down_sides))
-    # print(np.array(left_sides))
-    # print(np.array(right_sides))
-    # print("-----------------")
+            total_sides += 1
 
     return total_sides
-    
 
 
 def main():
 
-    file_path = '2024/day12/test_input.txt'
+    file_path = '2024/day12/input.txt'
 
     map = parse_input_file(file_path)
 
