@@ -27,7 +27,9 @@ def parse_input_file(file_combo):
 
             prize_line = lines[i + 2]
             prize_coordinates = extract_coordinates(prize_line)
-            new_prize_coordinates = (prize_coordinates[0] + 10000000000000, prize_coordinates[1] + 10000000000000)
+            new_prize_coordinates = (
+                prize_coordinates[0] + 10000000000000,
+                prize_coordinates[1] + 10000000000000)
 
             entry = (
                 button_a_coordinates,
@@ -60,182 +62,88 @@ def extract_coordinates(line):
 
 
 def calculate_tokens(machines_data, version):
+    """
+    Calculate the total tokens needed to solve the machines.
+
+    Parameters:
+    machines_data (set): A set of tuples representing the machines data.
+    version (str): The version of the machine to solve.
+
+    Returns:
+    total_tokens (int): The total tokens needed to solve the machines.
+    """
 
     total_tokens = 0
-    counter = 0
 
     for machine in machines_data:
-
-        counter += 1
 
         A_coord, B_coord, prize_coord, new_prize_coord = machine
 
         if version == "old":
-            limit = 100
-            prize_x = prize_coord[0]
+            combo = solve_system(A_coord, B_coord, prize_coord)
         else:
-            limit = 10000000000000
-            prize_x = new_prize_coord[0]
-            print(f"Checking machine {counter}/{len(machines_data)}")
+            prize_coord = new_prize_coord
+            combo = solve_system(A_coord, B_coord, prize_coord)
 
-        combos = find_combos(A_coord[0], B_coord[0], prize_x, limit)
-
-        filtered_combos = filter_combos(combos, A_coord[1], B_coord[1], prize_coord[1])
-
-        best_price = find_best_price(filtered_combos)
-        total_tokens += best_price
+        price = calculate_price(combo)
+        total_tokens += price
 
     return total_tokens
 
 
-def find_combos(A_x, B_x, prize_x, limit):
+def solve_system(A_coord, B_coord, prize_coord):
+    """
+    Solve the system of equations Ax + By = Px and Cx + Dy = Py.
 
-    combos = set()
+    Parameters:
+    A_coord (tuple): A tuple representing the coordinates of button A.
+    B_coord (tuple): A tuple representing the coordinates of button B.
+    prize_coord (tuple): A tuple representing the coordinates of the prize.
 
-    big = max(A_x, B_x)
-    small = min(A_x, B_x)
+    Returns:
+    x, y (tuple): A tuple representing the solution to the system of equations.
+    """
 
-    max_pushes = min(prize_x // small, limit)
+    Ax, Ay = A_coord
+    Bx, By = B_coord
+    Px, Py = prize_coord
 
-    for i in range(max_pushes):
+    y = (Ax * Py - Ay * Px) / (Ax * By - Ay * Bx)
+    x = (Px - Bx * y) / Ax
 
-        # if i % 10000000 == 0:
-        #     print(i, max_pushes)
+    if x % 1 != 0 or y % 1 != 0:
+        x = 0
+        y = 0
 
-        rest = prize_x - small * i
-        if rest % big == 0:
-            big_pushes = rest // big
-            if A_x > B_x:
-                combos.add((big_pushes, i))
-            else:
-                combos.add((i, big_pushes))
-
-    return combos
-
-
-def filter_combos(combos, A_y, B_y, prize_y):
-
-    filtered_combos = set()
-
-    for combo in combos:
-        if combo[0] * A_y + combo[1] * B_y == prize_y:
-            filtered_combos.add(combo)
-
-    return filtered_combos
+    return x, y
 
 
-def find_best_price(combos):
+def calculate_price(combo):
+    """
+    Calculate the price of the combo.
 
-    if not combos:
-        return 0
+    Parameters:
+    combo (tuple): A tuple representing the combo.
 
-    prices = []
+    Returns:
+    price (int): The price of the combo.
+    """
 
-    for combo in combos:
-        price = combo[0] * 3 + combo[1]
-        prices.append(price)
-
-    return min(prices)
-        
-
-######################### ALTERNATIVE SOLUTIONS (PART 1) #########################
-
-def find_combos_alt(A_x, B_x, prize_x, limit):
-
-    combos = set()
-
-    big = max(A_x, B_x)
-    small = min(A_x, B_x)
-
-    small_pushes = min(prize_x // small, limit)
-    big_pushes = 0
-
-    while small_pushes >= 0 and big_pushes <= limit:
-
-        if small * small_pushes + big * big_pushes == prize_x:
-            if A_x > B_x:
-                combos.add((big_pushes, small_pushes))
-            else:
-                combos.add((small_pushes, big_pushes))
-            small_pushes -= 1
-        elif small * small_pushes + big * big_pushes < prize_x:
-            big_pushes += 1
-        else:
-            small_pushes -= 1
-
-    return combos
-
-
-def calculate_tokens_alt(machines_data):
-
-    total_tokens = 0
-
-    for machine in machines_data:
-
-        A_coord, B_coord, prize_coord = machine
-
-        memory = (0, 0)
-        memories = set()
-        combos = set()
-        combos_x = push_button(0, A_coord[0], B_coord[0], prize_coord[0], memory, memories, combos)
-
-        filtered_combos = filter_combos(combos_x, A_coord[1], B_coord[1], prize_coord[1])
-
-        best_price = find_best_price(filtered_combos)
-        total_tokens += best_price
-
-    return total_tokens
-
-
-def push_button (sum, A, B, goal, memory, memories, combos):
-
-    if memory[0] == 100 or memory[1] == 100:
-        return False
-
-    if memory in memories:
-        return False
-    memories.add(memory)
-
-    sum_a = sum + A
-    memory_a = (memory[0] + 1, memory[1])
-    sum_b = sum + B
-    memory_b = (memory[0], memory[1] + 1)
-
-    if sum_a == goal:
-        return memory_a
-    elif sum_b == goal:
-        return memory_b
-    elif sum_a > goal and sum_b > goal:
-        return False
-    else:
-        combo_a = push_button(sum_a, A, B, goal, memory_a, memories, combos)
-        if isinstance(combo_a, tuple):
-            combos.add(combo_a)
-        elif isinstance(combo_a, set):
-            combos.update(combo_a)
-        
-        combo_b = push_button(sum_b, A, B, goal, memory_b, memories, combos)
-        if isinstance(combo_b, tuple):
-            combos.add(combo_b)
-        elif isinstance(combo_b, set):
-            combos.update(combo_b)
-
-    return combos
-
-#################################################################################
+    return int(combo[0] * 3 + combo[1])
 
 
 def main():
 
-    file_combo = '2024/day13/test_input.txt'
+    file_combo = '2024/day13/input.txt'
 
     machines_data = parse_input_file(file_combo)
 
     total_tokens = calculate_tokens(machines_data, "old")
     print("Total tokens:", total_tokens)
 
-    # new_total_tokens = calculate_tokens(machines_data, "new")
-    # print("New total tokens:", new_total_tokens)
+    new_total_tokens = calculate_tokens(machines_data, "new")
+    print("New total tokens:", new_total_tokens)
+
 
 if __name__ == '__main__':
     main()
