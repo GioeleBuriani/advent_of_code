@@ -66,6 +66,8 @@ def calculate_tokens(machines_data, version):
 
     for machine in machines_data:
 
+        counter += 1
+
         A_coord, B_coord, prize_coord, new_prize_coord = machine
 
         if version == "old":
@@ -76,14 +78,12 @@ def calculate_tokens(machines_data, version):
             prize_x = new_prize_coord[0]
             print(f"Checking machine {counter}/{len(machines_data)}")
 
-        combo = find_combos(A_coord[0], B_coord[0], prize_x, limit)
+        combos = find_combos(A_coord[0], B_coord[0], prize_x, limit)
 
-        filtered_combos = filter_combos(combo, A_coord[1], B_coord[1], prize_coord[1])
+        filtered_combos = filter_combos(combos, A_coord[1], B_coord[1], prize_coord[1])
 
         best_price = find_best_price(filtered_combos)
         total_tokens += best_price
-
-        counter += 1
 
     return total_tokens
 
@@ -95,24 +95,20 @@ def find_combos(A_x, B_x, prize_x, limit):
     big = max(A_x, B_x)
     small = min(A_x, B_x)
 
-    small_pushes = min(prize_x // small, limit)
-    big_pushes = 0
+    max_pushes = min(prize_x // small, limit)
 
-    while small_pushes >= 0 and big_pushes <= limit:
+    for i in range(max_pushes):
 
-        if small_pushes % 10000000 == 0:
-            print(f"Checking small_pushes {small_pushes} and big_pushes {big_pushes}")
+        # if i % 10000000 == 0:
+        #     print(i, max_pushes)
 
-        if small * small_pushes + big * big_pushes == prize_x:
+        rest = prize_x - small * i
+        if rest % big == 0:
+            big_pushes = rest // big
             if A_x > B_x:
-                combos.add((big_pushes, small_pushes))
+                combos.add((big_pushes, i))
             else:
-                combos.add((small_pushes, big_pushes))
-            small_pushes -= 1
-        elif small * small_pushes + big * big_pushes < prize_x:
-            big_pushes += 1
-        else:
-            small_pushes -= 1
+                combos.add((i, big_pushes))
 
     return combos
 
@@ -142,7 +138,33 @@ def find_best_price(combos):
     return min(prices)
         
 
-######################### ALTERNATIVE SOLUTION (PART 1) #########################
+######################### ALTERNATIVE SOLUTIONS (PART 1) #########################
+
+def find_combos_alt(A_x, B_x, prize_x, limit):
+
+    combos = set()
+
+    big = max(A_x, B_x)
+    small = min(A_x, B_x)
+
+    small_pushes = min(prize_x // small, limit)
+    big_pushes = 0
+
+    while small_pushes >= 0 and big_pushes <= limit:
+
+        if small * small_pushes + big * big_pushes == prize_x:
+            if A_x > B_x:
+                combos.add((big_pushes, small_pushes))
+            else:
+                combos.add((small_pushes, big_pushes))
+            small_pushes -= 1
+        elif small * small_pushes + big * big_pushes < prize_x:
+            big_pushes += 1
+        else:
+            small_pushes -= 1
+
+    return combos
+
 
 def calculate_tokens_alt(machines_data):
 
@@ -205,15 +227,15 @@ def push_button (sum, A, B, goal, memory, memories, combos):
 
 def main():
 
-    file_combo = '2024/day13/input.txt'
+    file_combo = '2024/day13/test_input.txt'
 
     machines_data = parse_input_file(file_combo)
 
     total_tokens = calculate_tokens(machines_data, "old")
     print("Total tokens:", total_tokens)
 
-    new_total_tokens = calculate_tokens(machines_data, "new")
-    print("New total tokens:", new_total_tokens)
+    # new_total_tokens = calculate_tokens(machines_data, "new")
+    # print("New total tokens:", new_total_tokens)
 
 if __name__ == '__main__':
     main()
