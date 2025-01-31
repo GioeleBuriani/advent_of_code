@@ -1,18 +1,18 @@
 import numpy as np
 
 
-def parse_input_file(file_combo):
+def parse_input_file(file_path):
     """
     Parse the input file and return a set of tuples representing the machines data.
 
     Parameters:
-    file_combo (str): The combo to the input file.
+    file_path (str): The combo to the input file.
 
     Returns:
     machines_data (set): A set of tuples representing the machines data.
     """
 
-    with open(file_combo, 'r') as file:
+    with open(file_path, 'r') as file:
 
         lines = [line.strip() for line in file if line.strip()]
 
@@ -134,9 +134,9 @@ def calculate_price(combo):
 
 def main():
 
-    file_combo = '2024/day13/input.txt'
+    file_path = '2024/day13/input.txt'
 
-    machines_data = parse_input_file(file_combo)
+    machines_data = parse_input_file(file_path)
 
     total_tokens = calculate_tokens(machines_data, "old")
     print("Total tokens:", total_tokens)
