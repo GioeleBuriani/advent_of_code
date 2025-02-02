@@ -1,125 +1,98 @@
+from typing import List
 import numpy as np
 
 
-def parse_input_file(file_path):
-    '''
-    Function to read and parse the content of the input file
+def parse_input_file(file_path: str) -> List[np.ndarray]:
+    """
+    Reads and parses the input file into a list of numpy arrays.
+
+    Each line in the file should contain integers separated by whitespace.
 
     Parameters:
-    file_path (str): The path to the input file
+        file_path (str): The path to the input file.
 
     Returns:
-    numbers (np.array): A numpy array with the numbers from the input file
-    '''
-
+        List[np.ndarray]: A list where each element is a numpy array of integers from a line.
+    """
+    reports = []  # Each report is a numpy array representing one line of integers.
     with open(file_path, 'r') as file:
-
-        # Initialize the list to store the numbers
-        numbers_list = []
-
-        # Read the file line by line
         for line in file:
-
-            # Split the line by the spaces
-            numbers = line.split(' ')
-
-            # Convert the numbers to integers
-            numbers = np.array([int(number) for number in numbers])
-
-            # Append the numbers to the list
-            numbers_list.append(numbers)
-
-    return numbers_list
+            # Remove leading/trailing whitespace and split on any whitespace.
+            numbers_str = line.strip().split()
+            # Convert the strings to integers and then create a numpy array.
+            numbers_array = np.array([int(num) for num in numbers_str])
+            reports.append(numbers_array)
+    return reports
 
 
-def check_safety(numbers):
-    '''
-    Function to check the safety of the reports
+def check_safety(reports: List[np.ndarray]) -> int:
+    """
+    Determines the number of safe reports.
+
+    A report is considered safe if it meets the safety condition directly or can be
+    made safe by removing one number (dampening).
 
     Parameters:
-    numbers (list): The list with the reports
+        reports (List[np.ndarray]): The list of reports.
 
     Returns:
-    safe_reports (int): The number of safe reports
-    '''
-
-    # Initialize the counter for the safe reports
-    safe_reports = 0
-
-    # Iterate over the reports
-    for report in numbers:
-
-        # Check if the report is safe
-        if check_safety_condition(report):
-            safe_reports += 1
-        elif problem_dampener(report):
-            safe_reports += 1
-
-    return safe_reports
+        int: The count of safe reports.
+    """
+    safe_count = 0
+    for report in reports:
+        # A report is safe if it meets the condition or can be fixed by removing one element.
+        if check_safety_condition(report) or problem_dampener(report):
+            safe_count += 1
+    return safe_count
 
 
-def check_safety_condition(report):
-    '''
-    Function to check if a report is safe
+def check_safety_condition(report: np.ndarray) -> bool:
+    """
+    Checks if a report is safe based on its ordering and the differences between consecutive numbers.
+
+    A report is safe if:
+      - It is strictly increasing with each consecutive difference less than 4, or
+      - It is strictly decreasing with each consecutive difference greater than -4.
 
     Parameters:
-    report (np.array): The report to check
+        report (np.ndarray): The report to check.
 
     Returns:
-    is_safe (bool): True if the report is safe, False otherwise
-    '''
-
-    # Check if the report is sorted in ascending order and the difference
-    # between the numbers is less than 4
-    if np.all(np.diff(report) > 0) and np.all(np.diff(report) < 4):
+        bool: True if the report is safe, False otherwise.
+    """
+    differences = np.diff(report)  # Compute differences once to avoid redundancy
+    if np.all(differences > 0) and np.all(differences < 4):
         return True
-    # Check if the report is sorted in descending order and the difference
-    # between the numbers is less than 4
-    elif np.all(np.diff(report) < 0) and np.all(np.diff(report) > -4):
+    if np.all(differences < 0) and np.all(differences > -4):
         return True
-    # If the report is not sorted or the difference between the numbers is
-    # greater than 4
-    else:
-        return False
-
-
-def problem_dampener(report):
-    '''
-    Function to check if a report is safe with a dampener
-
-    Parameters:
-    report (np.array): The report to check
-
-    Returns:
-    is_safe (bool): True if the report is safe, False otherwise
-    '''
-
-    # Iterate over the indexes in the report
-    for i in range(len(report)):
-
-        # Remove the level from the array
-        report_copy = np.delete(report, i)
-
-        # Check if the report is safe
-        if check_safety_condition(report_copy):
-            return True
-
     return False
 
 
-# Main function
-def main():
+def problem_dampener(report: np.ndarray) -> bool:
+    """
+    Checks if a report can be made safe by removing one element.
 
-    # Define the path to the input file
-    file_path = '2024/day2/input.txt'
+    Parameters:
+        report (np.ndarray): The report to check.
 
-    # Read and parse the content of the file
-    numbers = parse_input_file(file_path)
+    Returns:
+        bool: True if removing one element results in a safe report, False otherwise.
+    """
+    for index in range(len(report)):
+        # Create a version of the report without the element at the current index.
+        report_without_element = np.delete(report, index)
+        if check_safety_condition(report_without_element):
+            return True
+    return False
 
-    # Check the safety of the reports
-    safe_reports = check_safety(numbers)
 
-    # Print the number of safe reports
+def main() -> None:
+    """
+    Main execution function.
+    """
+    file_path = '2024/day02/input.txt'
+    reports = parse_input_file(file_path)
+    safe_reports = check_safety(reports)
     print(f'The number of safe reports is: {safe_reports}')
 
 
